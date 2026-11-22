@@ -25,8 +25,6 @@ import {
   Moon,
 } from 'lucide-react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-
 const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Students', path: '/admin/students', icon: Users },
@@ -117,65 +115,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isDashboard) return
 
-    const controller = new AbortController()
-
-    const loadDashboard = async () => {
-      const token = localStorage.getItem('campushub-admin-token')
-
-      if (!token) {
-        navigate('/admin/login', { replace: true })
-        return
-      }
-
-      try {
-        setLoading(true)
-        setError('')
-
-        const response = await fetch(
-          `${API_URL}/api/admin/dashboard`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            signal: controller.signal,
-          }
-        )
-
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('campushub-admin-token')
-          navigate('/admin/login', { replace: true })
-          return
-        }
-
-        if (!response.ok) {
-          throw new Error('Unable to load dashboard data.')
-        }
-
-        const result = await response.json()
-        setStats(result.stats || {})
-        setActivities(
-          Array.isArray(result.activities) ? result.activities : []
-        )
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          setError(err.message || 'Something went wrong.')
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false)
-        }
-      }
+    if (!localStorage.getItem('campushub-admin-session')) {
+      navigate('/admin/login', { replace: true })
+      return
     }
 
-    loadDashboard()
-
-    return () => controller.abort()
+    setStats({
+      totalStudents: 248,
+      totalJobs: 18,
+      totalCourses: 12,
+      totalApplications: 36,
+    })
+    setActivities([
+      { id: 1, title: 'New student registered', time: '2 minutes ago' },
+      { id: 2, title: 'Job opening published', time: '35 minutes ago' },
+      { id: 3, title: 'Course updated', time: '1 hour ago' },
+    ])
+    setLoading(false)
   }, [navigate, isDashboard])
 
   const handleLogout = () => {
-    localStorage.removeItem('campushub-admin-token')
+    localStorage.removeItem('campushub-admin-session')
     navigate('/admin/login', { replace: true })
   }
 
@@ -474,7 +434,7 @@ export default function AdminDashboard() {
                     <Clock3 size={28} className="mx-auto text-slate-400" />
                     <h4 className="mt-3 font-semibold">No recent activity</h4>
                     <p className="mt-1 text-sm text-slate-500">
-                      Activity will appear here when your backend provides it.
+                      Demo activity is not currently available.
                     </p>
                   </div>
                 ) : (

@@ -18,8 +18,6 @@ import {
 } from 'lucide-react'
 import { codingQuestions, languageLibraries, languageTemplates } from './coding.jsx'
 import './CodePractic.css'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 const languages = [
   { id: 'cpp', label: 'C++17', editorId: 'cpp' },
   { id: 'java', label: 'Java', editorId: 'java' },
@@ -27,27 +25,6 @@ const languages = [
   { id: 'javascript', label: 'JavaScript (Node.js)', editorId: 'javascript' },
 ]
 const difficultyOrder = ['Easy', 'Medium', 'Hard']
-
-async function readApiResponse(response) {
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.toLowerCase().includes('application/json')) {
-    const body = await response.text()
-    if (/^\s*<!doctype html|^\s*<html/i.test(body)) {
-      throw new Error(
-        `The code API returned an HTML page (HTTP ${response.status}), not JSON. ` +
-        'The backend on port 5000 may be outdated or VITE_API_URL may point to the frontend. ' +
-        'Restart src/server with the updated code and verify its API URL.'
-      )
-    }
-    throw new Error(`The code API returned an unexpected response (HTTP ${response.status}).`)
-  }
-
-  try {
-    return await response.json()
-  } catch {
-    throw new Error('The code API returned malformed JSON. Check the backend logs and try again.')
-  }
-}
 
 function getSavedCode(challengeId, language) {
   return localStorage.getItem(`campushub-code-${challengeId}-${language}`)
@@ -96,23 +73,7 @@ function CodePractic() {
   const languageConfig = languages.find((item) => item.id === language)
 
   useEffect(() => {
-    let active = true
-    fetch(`${API_URL}/api/code/health`)
-      .then(async (response) => {
-        const data = await readApiResponse(response)
-        if (!response.ok) throw new Error(data.message || 'Unable to check the code runner.')
-        return data
-      })
-      .then((data) => {
-        if (active) setRunnerAvailable(data.configured)
-      })
-      .catch(() => {
-        if (active) setRunnerAvailable(false)
-      })
-
-    return () => {
-      active = false
-    }
+    setRunnerAvailable(false)
   }, [])
 
   useEffect(() => {
@@ -156,32 +117,8 @@ function CodePractic() {
     setError('')
     setResultTab('results')
 
-    try {
-      const response = await fetch(`${API_URL}/api/code/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          challengeId,
-          language,
-          sourceCode: code,
-          mode,
-        }),
-      })
-      const data = await readApiResponse(response)
-      if (!response.ok) {
-        throw new Error(data.message || 'Code execution failed.')
-      }
-
-      setExecution(data)
-    } catch (requestError) {
-      setError(
-        requestError instanceof TypeError
-          ? 'Could not reach the code runner. Start the CampusHub server and configure Judge0.'
-          : requestError.message
-      )
-    } finally {
-      setExecutionMode('')
-    }
+    setError('Code execution is unavailable in this static build.')
+    setExecutionMode('')
   }
   runCodeRef.current = runCode
 

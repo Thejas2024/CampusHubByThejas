@@ -13,7 +13,7 @@ export const courses = [
     category: 'Development',
     color: 'orange',
     gradient: 'from-orange-500 to-orange-600',
-    description: 'Learn frontend and backend development and build modern full-stack applications.',
+    description: 'Learn frontend development and build modern full-stack applications.',
     embedUrl: 'https://www.youtube.com/embed/LzMnsfqjzkA',
   },
   {
@@ -24,7 +24,7 @@ export const courses = [
     category: 'Programming',
     color: 'blue',
     gradient: 'from-blue-500 to-indigo-600',
-    description: 'Explore Java programming, backend development, databases, and full-stack application development.',
+    description: 'Explore Java programming, databases, and full-stack application development.',
     embedUrl: 'https://www.youtube.com/embed/xk4_1vDrzzo',
   },
   {
@@ -328,7 +328,7 @@ export const jobsDetails = [
       "Develop and test machine learning models.",
       "Build AI-powered applications and integrate AI APIs.",
       "Process datasets and evaluate model performance.",
-      "Collaborate with frontend and backend developers.",
+      "Collaborate with frontend developers.",
       "Document solutions and improve model accuracy."
     ],
     "requiredSkills": [
@@ -379,10 +379,10 @@ export const jobsDetails = [
     "experience": "0-1 years",
     "salary": "₹3,00,000 - ₹5,00,000 per annum",
     "department": "Software Development",
-    "description": "We are seeking a Junior Java Developer with a good understanding of Java programming, object-oriented concepts, SQL, and backend development.",
+    "description": "We are seeking a Junior Java Developer with a good understanding of Java programming, object-oriented concepts, SQL, and application development.",
     "responsibilities": [
       "Write clean and maintainable Java code.",
-      "Develop and maintain backend application features.",
+      "Develop and maintain application features.",
       "Work with databases and write SQL queries.",
       "Debug issues and participate in code reviews.",
       "Collaborate with frontend developers and QA engineers."

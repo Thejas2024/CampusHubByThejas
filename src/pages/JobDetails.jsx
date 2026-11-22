@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+import { jobsDetails } from '../data/demoData.js'
 
 function asList(value) {
   if (Array.isArray(value)) return value.filter(Boolean)
@@ -34,34 +33,12 @@ export default function JobDetails() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    const controller = new AbortController()
+    const selectedJob = jobsDetails.find((item) => item.id === jobId)
+      || jobsDetails.find((item) => item.title.toLowerCase().replace(/\s+/g, '-') === jobId)
 
-    async function loadJob() {
-      try {
-        setLoadError('')
-        const response = await fetch(`${API_URL}/api/jobs/${jobId}`, {
-          signal: controller.signal,
-        })
-        const result = await response.json()
-        if (!response.ok) {
-          throw new Error(result.message || 'Unable to load job details.')
-        }
-        setJob(result)
-      } catch (requestError) {
-        if (requestError.name !== 'AbortError') {
-          setLoadError(
-            requestError instanceof TypeError
-              ? 'Cannot connect to the jobs service. Check that the backend is running.'
-              : requestError.message
-          )
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false)
-      }
-    }
-
-    loadJob()
-    return () => controller.abort()
+    setJob(selectedJob || null)
+    setLoadError(selectedJob ? '' : 'Job not found.')
+    setLoading(false)
   }, [jobId])
 
   const updateField = event => {
@@ -76,31 +53,9 @@ export default function JobDetails() {
     setError('')
     setSubmitting(true)
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/jobs/${job.id}/applications`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        }
-      )
-      const result = await response.json()
-      if (!response.ok) {
-        throw new Error(result.message || 'Unable to submit your application.')
-      }
-
-      setSuccess(true)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } catch (requestError) {
-      setError(
-        requestError instanceof TypeError
-          ? 'Cannot connect to the application service. Please try again.'
-          : requestError.message
-      )
-    } finally {
-      setSubmitting(false)
-    }
+    setSuccess(true)
+    setSubmitting(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const inputClass =

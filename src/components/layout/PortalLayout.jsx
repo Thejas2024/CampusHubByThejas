@@ -75,7 +75,6 @@ export default function PortalLayout() {
 
   // Log out the current user
   const handleLogout = () => {
-    localStorage.removeItem('campushub-token')
     localStorage.removeItem('campushub-username')
     setNotice(false)
     closeMobileMenu()

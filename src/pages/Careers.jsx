@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search,
@@ -12,8 +12,7 @@ import {
 
 import SectionHeading from '../components/SectionHeading.jsx'
 import JobCard from '../components/JobCard.jsx'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+import { jobs as demoJobs } from '../data/demoData.js'
 
 const filterOptions = {
   Qualification: [
@@ -164,8 +163,8 @@ function AdvancedFilter({
 
 export default function Careers() {
   const navigate = useNavigate()
-  const [jobs, setJobs] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [jobs, setJobs] = useState(demoJobs)
+  const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [query, setQuery] = useState('')
   const [type, setType] = useState('All')
@@ -174,37 +173,6 @@ export default function Careers() {
   const [draftFilters, setDraftFilters] = useState(createEmptyFilters)
   const [activeFilters, setActiveFilters] = useState(createEmptyFilters)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadJobs() {
-      try {
-        setLoadError('')
-        const response = await fetch(`${API_URL}/api/jobs`, {
-          signal: controller.signal,
-        })
-        const result = await response.json()
-        if (!response.ok) {
-          throw new Error(result.message || 'Unable to load job openings.')
-        }
-        setJobs(result)
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          setLoadError(
-            error instanceof TypeError
-              ? 'Cannot connect to the jobs service. Check that the backend is running.'
-              : error.message
-          )
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false)
-      }
-    }
-
-    loadJobs()
-    return () => controller.abort()
-  }, [])
 
   const resetFilters = () => {
     setDraftFilters(createEmptyFilters())

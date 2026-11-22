@@ -8,8 +8,6 @@ import {
   CheckCircle2, FileText, TrendingUp, ChevronDown
 } from 'lucide-react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-
 const emptyJob = {
   title: '',
   company: '',
@@ -26,6 +24,37 @@ const emptyJob = {
   applications: 0,
   status: 'Draft'
 }
+
+const initialJobs = [
+  {
+    id: 1,
+    title: 'AI Engineer',
+    company: 'tejTech',
+    type: 'Full-time',
+    location: 'Bengaluru',
+    salary: '₹4 LPA',
+    experience: '0-2 years',
+    vacancies: 3,
+    skills: 'Python, Machine Learning',
+    description: 'Develop and maintain AI-powered applications.',
+    applications: 12,
+    status: 'Published',
+  },
+  {
+    id: 2,
+    title: 'Junior Java Developer',
+    company: 'tejTech',
+    type: 'Full-time',
+    location: 'Bengaluru',
+    salary: '₹3 LPA',
+    experience: '0-1 years',
+    vacancies: 5,
+    skills: 'Java, SQL',
+    description: 'Build application features and work with relational databases.',
+    applications: 8,
+    status: 'Published',
+  },
+]
 
 function JobField({
   label,
@@ -57,8 +86,8 @@ function JobField({
 
 export default function JobOpenings() {
   const navigate = useNavigate()
-  const [jobs, setJobs] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [jobs, setJobs] = useState(initialJobs)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const [search, setSearch] = useState('')
@@ -71,70 +100,10 @@ export default function JobOpenings() {
   const [form, setForm] = useState(emptyJob)
 
   useEffect(() => {
-    const controller = new AbortController()
-    const token = localStorage.getItem('campushub-admin-token')
-
-    if (!token) {
+    if (!localStorage.getItem('campushub-admin-session')) {
       navigate('/admin/login', { replace: true })
-      return () => controller.abort()
     }
-
-    async function loadJobs() {
-      try {
-        const response = await fetch(`${API_URL}/api/admin/jobs`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        })
-        const result = await response.json()
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('campushub-admin-token')
-          navigate('/admin/login', { replace: true })
-          return
-        }
-        if (!response.ok) {
-          throw new Error(result.message || 'Unable to load job openings.')
-        }
-        setJobs(result)
-      } catch (requestError) {
-        if (requestError.name !== 'AbortError') {
-          setError(
-            requestError instanceof TypeError
-              ? 'Cannot connect to the jobs service. Check that the backend is running.'
-              : requestError.message
-          )
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false)
-      }
-    }
-
-    loadJobs()
-    return () => controller.abort()
   }, [navigate])
-
-  const saveJobRequest = async (job, id) => {
-    const token = localStorage.getItem('campushub-admin-token')
-    const response = await fetch(
-      `${API_URL}/api/admin/jobs${id ? `/${id}` : ''}`,
-      {
-        method: id ? 'PUT' : 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(job),
-      }
-    )
-    const result = response.status === 204 ? {} : await response.json()
-    if (response.status === 401 || response.status === 403) {
-      localStorage.removeItem('campushub-admin-token')
-      navigate('/admin/login', { replace: true })
-    }
-    if (!response.ok) {
-      throw new Error(result.message || 'Unable to save the job opening.')
-    }
-    return result.job
-  }
 
   const published = jobs.filter(j => j.status === 'Published').length
   const drafts = jobs.filter(j => j.status === 'Draft').length
@@ -182,45 +151,26 @@ export default function JobOpenings() {
       return
     }
 
-    try {
-      const savedJob = await saveJobRequest(form, editingId)
-      setJobs(previous =>
-        editingId
-          ? previous.map(job => job.id === editingId ? savedJob : job)
-          : [savedJob, ...previous]
-      )
-      setShowForm(false)
-      setEditingId(null)
-      setForm(emptyJob)
-    } catch (requestError) {
-      alert(requestError.message)
-    }
+    const savedJob = editingId
+      ? { ...form, id: editingId }
+      : { ...form, id: Date.now(), applications: 0 }
+
+    setJobs(previous =>
+      editingId
+        ? previous.map(job => job.id === editingId ? savedJob : job)
+        : [savedJob, ...previous]
+    )
+    setShowForm(false)
+    setEditingId(null)
+    setForm(emptyJob)
   }
 
   const deleteJob = async (id) => {
     if (!window.confirm('Are you sure you want to delete this job?')) return
 
-    try {
-      const token = localStorage.getItem('campushub-admin-token')
-      const response = await fetch(`${API_URL}/api/admin/jobs/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('campushub-admin-token')
-        navigate('/admin/login', { replace: true })
-      }
-      if (!response.ok) {
-        const result = await response.json()
-        throw new Error(result.message || 'Unable to delete the job opening.')
-      }
-
-      setJobs(previous => previous.filter(job => job.id !== id))
-      setMenuId(null)
-      if (selectedJob?.id === id) setSelectedJob(null)
-    } catch (requestError) {
-      alert(requestError.message)
-    }
+    setJobs(previous => previous.filter(job => job.id !== id))
+    setMenuId(null)
+    if (selectedJob?.id === id) setSelectedJob(null)
   }
 
   const togglePublish = async (id) => {

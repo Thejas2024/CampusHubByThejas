@@ -48,7 +48,7 @@ export const courseExams = {
     questions: [
       question(401, 'Which MERN component is a document database?', ['Express', 'React', 'MongoDB', 'Node.js'], 2, 'MongoDB is the document database in the MERN stack.'),
       question(402, 'What is React primarily used to build?', ['User interfaces', 'Database indexes', 'Operating systems', 'HTTP servers only'], 0, 'React is a library for building user interfaces.'),
-      question(403, 'Which component handles HTTP routing in a typical MERN backend?', ['Express', 'MongoDB', 'JSX', 'CSS'], 0, 'Express provides routing and middleware for Node.js applications.'),
+      question(403, 'Which component handles HTTP routing in a MERN application?', ['Express', 'MongoDB', 'JSX', 'CSS'], 0, 'Express provides routing and middleware for Node.js applications.'),
       question(404, 'What does JSON.parse() do?', ['Converts a JSON string to a JavaScript value', 'Sends an HTTP request', 'Creates a React component', 'Connects to MongoDB'], 0, 'JSON.parse converts valid JSON text into a JavaScript value.'),
       question(405, 'Where should database credentials be kept in a deployed MERN app?', ['In a checked-in React file', 'In server-side environment configuration', 'In a public image', 'In a page title'], 1, 'Database credentials should remain on the server in protected configuration.'),
     ],

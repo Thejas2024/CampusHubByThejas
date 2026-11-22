@@ -13,8 +13,6 @@ import {
 
 import Logo from '../components/Logo.jsx'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-
 export default function Login() {
   const navigate = useNavigate()
 
@@ -32,60 +30,22 @@ export default function Login() {
     setMessage('')
     setSubmitting(true)
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/${registering ? 'register' : 'login'}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: username.trim(),
-            password,
-          }),
-        }
-      )
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(
-          result.message || `Request failed (${response.status}).`
-        )
-      }
-
-      // Registration successful
-      if (registering) {
-        setRegistering(false)
-        setPassword('')
-        setMessage('Account created. Sign in with your username.')
-        return
-      }
-
-      // Verify login response
-      if (!result.token) {
-        throw new Error(
-          'The server response did not include a sign-in token.'
-        )
-      }
-
-      // Save authentication token and username
-      localStorage.setItem('campushub-token', result.token)
-      localStorage.setItem(
-        'campushub-username',
-        result.user?.username || username.trim()
-      )
-
-      // Navigate to student portal
-      navigate('/portal')
-    } catch (requestError) {
-      setError(
-        requestError instanceof TypeError
-          ? 'Unable to reach the login server. Make sure the backend is running on port 5000.'
-          : requestError.message
-      )
-    } finally {
+    if (!username.trim() || !password) {
+      setError('Enter a username and password.')
       setSubmitting(false)
+      return
     }
+
+    if (registering) {
+      setRegistering(false)
+      setPassword('')
+      setMessage('Demo account created. Sign in with your username.')
+      setSubmitting(false)
+      return
+    }
+
+    localStorage.setItem('campushub-username', username.trim())
+    navigate('/portal')
   }
 
   const changeForm = () => {
