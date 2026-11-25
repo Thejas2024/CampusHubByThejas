@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://your-campushub.vercel.app"
+    "https://campus-hub-by-thejas-ds.vercel.app"
   ]
 }));
 
