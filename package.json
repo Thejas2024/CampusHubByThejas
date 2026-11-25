@@ -1,5 +1,5 @@
 {
-  "name": "campushub-reference-design",
+  "name": "campushub",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -23,4 +23,5 @@
     "tailwindcss": "^3.4.19",
     "vite": "^6.0.0"
   }
+  
 }
