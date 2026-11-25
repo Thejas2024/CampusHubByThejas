@@ -13,12 +13,17 @@ import {
 
 import Logo from '../components/Logo.jsx'
 
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || 'http://localhost:5000'
+).replace(/\/+$/, '')
+
 export default function Login() {
   const navigate = useNavigate()
 
   const [registering, setRegistering] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -30,22 +35,76 @@ export default function Login() {
     setMessage('')
     setSubmitting(true)
 
-    if (!username.trim() || !password) {
-      setError('Enter a username and password.')
+    if (!username.trim() || !password || (registering && !email.trim())) {
+      setError(
+        registering
+          ? 'Enter a username, email, and password.'
+          : 'Enter a username or email and password.',
+      )
       setSubmitting(false)
       return
     }
 
-    if (registering) {
-      setRegistering(false)
-      setPassword('')
-      setMessage('Demo account created. Sign in with your username.')
-      setSubmitting(false)
-      return
-    }
+    try {
+      const requestBody = registering
+        ? {
+            username: username.trim(),
+            email: email.trim(),
+            password,
+          }
+        : {
+            identifier: username.trim(),
+            password,
+          }
+      const response = await fetch(
+        `${API_BASE_URL}/api/${registering ? 'register' : 'login'}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        },
+      )
+      let result
+      try {
+        result = await response.json()
+      } catch {
+        throw new Error('The server returned an invalid response.')
+      }
 
-    localStorage.setItem('campushub-username', username.trim())
-    navigate('/portal')
+      if (!response.ok) {
+        throw new Error(
+          result.message ||
+            (registering
+              ? 'Unable to create account.'
+              : 'Unable to sign in.'),
+        )
+      }
+
+      if (registering) {
+        setRegistering(false)
+        setPassword('')
+        setMessage(result.message || 'Account created. You can sign in now.')
+        return
+      }
+
+      if (!result.token || !result.user?.username) {
+        throw new Error('The server returned an invalid login response.')
+      }
+
+      localStorage.setItem('campushub-token', result.token)
+      localStorage.setItem('campushub-username', result.user.username)
+      navigate('/portal')
+    } catch (submitError) {
+      setError(
+        submitError instanceof TypeError
+          ? 'Unable to connect to the server. Please try again.'
+          : submitError instanceof Error
+            ? submitError.message
+            : 'Unable to sign in. Please try again.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const changeForm = () => {
@@ -103,12 +162,12 @@ export default function Login() {
           <p>
             {registering
               ? 'Choose a username and password to get started.'
-              : 'Sign in with your CampusHub username.'}
+              : 'Sign in with your CampusHub username or email.'}
           </p>
 
           <form onSubmit={handleSubmit}>
             <label htmlFor="login-username">
-              Username
+              {registering ? 'Username' : 'Username or email'}
 
               <span className="input-wrap">
                 <UserRound size={16} aria-hidden="true" />
@@ -119,15 +178,39 @@ export default function Login() {
                   autoComplete="username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  placeholder="Enter your username"
-                  minLength={3}
-                  maxLength={30}
-                  pattern="[A-Za-z0-9_]+"
-                  title="Use 3–30 letters, numbers, or underscores."
+                  placeholder={
+                    registering
+                      ? 'Choose a username'
+                      : 'Enter your username or email'
+                  }
+                  minLength={registering ? 3 : undefined}
+                  maxLength={registering ? 30 : 254}
+                  pattern={registering ? '[A-Za-z0-9_]+' : undefined}
                   required
                 />
               </span>
             </label>
+
+            {registering && (
+              <label htmlFor="login-email">
+                Email
+
+                <span className="input-wrap">
+                  <UserRound size={16} aria-hidden="true" />
+
+                  <input
+                    id="login-email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="Enter your email"
+                    maxLength={254}
+                    required
+                  />
+                </span>
+              </label>
+            )}
 
             <label htmlFor="login-password">
               Password
